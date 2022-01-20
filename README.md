@@ -19,3 +19,7 @@ input csv 예시
 1) request header : 구글 탐지 우회
 2) csv 파일 경로
 3) .py 파일과 동일 경로에 /result 폴더 생성해주어야 함.
+
+## 결과
+[실행](photo/1.png)
+[결과](photo/2.png)
