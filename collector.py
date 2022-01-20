@@ -18,6 +18,7 @@ input csv 예시
 3) .py 파일과 동일 경로에 /result 폴더 생성해주어야 함.
 """
 
+from hashlib import new
 from shutil import ExecError
 import requests
 from bs4 import BeautifulSoup
@@ -31,40 +32,55 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 GoogleURL = "https://scholar.google.com/scholar?hl=ko&as_sdt=0%2C5&q=SEARCH_QUERY&btnG="
 sci_hub = "https://sci-hub.se/"
 
+"""
+USER INPUT
+"""
 # request header. 구글 보안 탐지 우회(반드시 추가 필요)
 HEADERS = {}
+# 정해진 양식으로 만들어진 csv 파일의 경로
+path_csv = ""
 
 """
 path_csv : csv 파일의 경로
-return : 논문 이름들로 구성된 리스트
+return : (result: 논문 이름들 리스트, data: csv 전체 데이터 리스트)
 def get_list_from_csv(str: path_csv)
 """
 
 def get_list_from_csv(path_csv):
     result = []
     data = csv.reader(open(path_csv, 'r'))
+    data = list(data)
     for line in data:
         result.append(line[1])
     print("Read CSV Done!")
-    return result
+    return (result, data)
 
 """
 SEARCH_QUERY : google scholar에 검색하려고 하는 문자열
 return : 논문 PDF의 URL
 def search(str : SEARCH_QUERY):
     1. SEARCH_QUERY를 google scholar에 검색
-    2. 검색 후 첫 번째 검색결과에서 PDF가 존재하면 PDF URL을 리턴
-    3. PDF 존재하지 않으면, 해당 검색 결과 제목 부분으로 들어간 후에,
-        들어간 페이지에서 doi url을 정규표현식으로 검색함.
-        이후에 sci-hub와 연결하여 생성한 PDF URL을 리턴
+    2. 검색 결과를 html.parser 적용한 BeautifulSoup 객체를 반환
 """
 def search(SEARCH_QUERY):
     # Google Scholar
     res = requests.get(url = GoogleURL.replace("SEARCH_QUERY", SEARCH_QUERY), headers=HEADERS, verify=False)
     soup = BeautifulSoup(res.content, "html.parser")
+    return soup
 
+"""
+soup : search() 함수에서 리턴된 값.
+return : PDF URL
+def retrievePDF(BeautifulSoup : soup):
+    1. 첫 번째 검색결과에서 PDF가 존재하면 PDF URL을 리턴
+    2. PDF 존재하지 않으면, 해당 검색 결과 제목 부분으로 들어간 후에,
+        들어간 페이지에서 doi url을 정규표현식으로 검색함.
+        이후에 sci-hub와 연결하여 생성한 PDF URL을 리턴
+"""
+def retrievePDF(soup):
     # 검색했을 때 첫 번째 뜨는 논문
-    pdf_paper = soup.find("span", string="[PDF]")
+    first = soup.select_one(".gs_r")
+    pdf_paper = first.find("span", string="[PDF]")
     if pdf_paper:
         href = pdf_paper.parent.attrs['href']
         print("From Google Scholar: ", href)
@@ -72,7 +88,6 @@ def search(SEARCH_QUERY):
 
     # [PDF] not exist.
     else:
-    #print("HERE")
         # 첫 번째 논문의 '논문 제목' 부분
         href2 = soup.select_one(".gs_ri .gs_rt a").attrs['href']
         if href2:
@@ -92,6 +107,25 @@ def search(SEARCH_QUERY):
                 raise Exception("Something Wrong..1")
         else:
             raise Exception("Something Wrong..2")
+
+"""
+soup : search() 함수에서 리턴된 값.
+return : (int: year, int: citation) 튜플
+def year_citation(BeautifulSoup: soup):
+    첫 번째 검색 결과를 파싱하여, 연도와 인용 수 파싱
+"""
+def year_citation(soup):
+    first = soup.select_one(".gs_r")
+    # year, 예시) 2014 - Digital Investigation
+    year = re.search("([\d]{4}) -", first.text)
+    if year:                # ['2014 -', '2014']
+        year = int(year[1])
+    # citation
+    citation = re.search("([\d]{1,4})회 인용", first.text)
+    if citation:            # ['2048회 인용', '2048']
+        citation = int(citation[1])
+
+    return (year, citation)    
 
 """
 URL : pdf의 URL
@@ -114,16 +148,27 @@ def save(URL, save_name):
 """
 MAIN START!
 """
-path_csv = ""
-paper_list = get_list_from_csv(path_csv)[1:]
+(paper_list, data) = get_list_from_csv(path_csv)#[1:]
 for idx, paper_name in enumerate(paper_list):
+    if idx == 0:    # 중간부터 실행할 때에는 여기 조건도 같이 변경해주어야 함
+        continue    # 목차 1줄 빼기
     try:
-        paper_url = search(paper_name)
+        soup = search(paper_name)
+        paper_url = retrievePDF(soup)
+        (year, citation) = year_citation(soup)
     except Exception as e:
         print(f"Error occured in search({paper_name[:20]})", e)
-    # isset() in python, 예외 없이 성공했을 때에 다음을 진행
-    if 'paper_url' in vars():
-        print(f"[{idx}]", end="")
+    
+    # csv에 연도, 인용 추가
+    data[idx][0] = year
+    data[idx][2] = citation
+    f = open(path_csv, 'w', newline='')
+    wr = csv.writer(f)
+    wr.writerows(data)
+
+    # PDF 파일 저장
+    if 'paper_url' in vars(): # isset() in python, 예외 없이 성공했을 때에 다음을 진행
+        print(f"[{idx}][{year}년, {citation}인용]", end="")
         paper_name = paper_name.replace('/','')
         save(paper_url, "result/" + paper_name)
         #폴더....
