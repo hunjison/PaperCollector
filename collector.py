@@ -177,5 +177,5 @@ for idx, paper_name in enumerate(paper_list):
     if 'paper_url' in vars(): # isset() in python, 예외 없이 성공했을 때에 다음을 진행
         print(f"[{idx}][{year}년, {citation}인용]", end="")
         paper_name = paper_name.replace('/','')
-        save(paper_url, "result/" + paper_name)
+        save(paper_url, "result/" + f"{year}_{paper_name}")
         #폴더....
