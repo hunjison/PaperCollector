@@ -126,6 +126,10 @@ def year_citation(soup):
     if citation:            # ['2048회 인용', '2048']
         citation = int(citation[1])
 
+    # None -> 0
+    year = 0 if type(year) != type(0) else year
+    citation = 0 if type(citation) != type(0) else citation
+
     return (year, citation)    
 
 """
@@ -164,6 +168,7 @@ for idx, paper_name in enumerate(paper_list):
     # csv에 연도, 인용 추가
     data[idx][0] = year
     data[idx][2] = citation
+    data[idx][3] = 'o'
     f = open(path_csv, 'w', newline='')
     wr = csv.writer(f)
     wr.writerows(data)
