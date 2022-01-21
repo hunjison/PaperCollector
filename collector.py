@@ -142,13 +142,15 @@ def save(URL, save_name):
         file = requests.get(URL, stream = True, verify=False)
     except Exception as e:
         print("URL error..", URL, e)
-        return
+        return False
     
     with open(save_name + ".pdf","wb") as pdf:
         for chunk in file.iter_content(chunk_size=1024):
             if chunk:
                 pdf.write(chunk)
         print("Save PDF Done!", save_name[:60])
+    
+    return True
 
 """
 MAIN START!
@@ -164,18 +166,18 @@ for idx, paper_name in enumerate(paper_list):
         (year, citation) = year_citation(soup)
     except Exception as e:
         print(f"Error occured in search({paper_name[:20]})", e)
-    
-    # csv에 연도, 인용 추가
-    data[idx][0] = year
-    data[idx][2] = citation
-    data[idx][3] = 'o'
-    f = open(path_csv, 'w', newline='')
-    wr = csv.writer(f)
-    wr.writerows(data)
 
     # PDF 파일 저장
     if 'paper_url' in vars(): # isset() in python, 예외 없이 성공했을 때에 다음을 진행
         print(f"[{idx}][{year}년, {citation}인용]", end="")
         paper_name = paper_name.replace('/','')
-        save(paper_url, "result/" + f"{year}_{paper_name}")
-        #폴더....
+        save_result = save(paper_url, "result/" + f"{year}_{paper_name}")
+        
+    if save_result:
+        # csv에 연도, 인용 추가
+        data[idx][0] = year
+        data[idx][2] = citation
+        data[idx][3] = 'o'
+        f = open(path_csv, 'w', newline='')
+        wr = csv.writer(f)
+        wr.writerows(data)
