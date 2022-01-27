@@ -1,10 +1,10 @@
 """
 input csv 예시
----------------------------------------------------------------
-연도         |   이름               |   인용수      |   수집 여부
----------------------------------------------------------------
-            |  FlowDroid ..       |             |    x (or o)    
----------------------------------------------------------------
+-----------------------------------------------------------------------------
+태그    |   연도         |   이름               |   인용수      |   수집 여부
+-----------------------------------------------------------------------------
+C1     |               |  FlowDroid ...      |             |    x (or o)    
+-----------------------------------------------------------------------------
 """
 
 """
@@ -52,7 +52,7 @@ def get_list_from_csv(path_csv):
     data = csv.reader(open(path_csv, 'r'))
     data = list(data)
     for line in data:
-        result.append(line[1])
+        result.append(line[2])
     print("Read CSV Done!")
     return (result, data)
 
@@ -101,7 +101,10 @@ def retrievePDF(soup):
                 soup3 = BeautifulSoup(res3.content, "html.parser")
                 pdf_src = soup3.select_one("#article embed").attrs['src']
                 # //sci-hub.se/downloads/2019-09-13/71/..
-                pdf_src = "https:" + pdf_src
+                if pdf_src.find("https://") == 0:
+                    pass
+                else:
+                    pdf_src = "https:" + pdf_src
                 print("From sci-hub: ",pdf_src)
                 return pdf_src
             else:
@@ -158,26 +161,28 @@ MAIN START!
 (paper_list, data) = get_list_from_csv(path_csv)#[1:]
 for idx, paper_name in enumerate(paper_list):
     # 목차 1줄 빼기 + 중복 작업 수행 X
-    if idx == 0 or data[idx][3] == 'o':
+    if idx == 0 or data[idx][4] == 'o':
         continue 
     try:
         soup = search(paper_name)
         paper_url = retrievePDF(soup)
+        tag = data[idx][0]
         (year, citation) = year_citation(soup)
     except Exception as e:
         print(f"Error occured in search({paper_name[:20]})", e)
 
     # PDF 파일 저장
+    save_result = None
     if 'paper_url' in vars(): # isset() in python, 예외 없이 성공했을 때에 다음을 진행
-        print(f"[{idx}][{year}년, {citation}인용]", end="")
+        print(f"[{tag}][{idx}][{year}년, 인용:{citation}]", end="")
         paper_name = paper_name.replace('/','')
-        save_result = save(paper_url, "result/" + f"{year}_{paper_name}")
+        save_result = save(paper_url, "result/" + f"{tag}_{year}_{paper_name}")
         
     if save_result:
         # csv에 연도, 인용 추가
-        data[idx][0] = year
-        data[idx][2] = citation
-        data[idx][3] = 'o'
+        data[idx][1] = year
+        data[idx][3] = citation
+        data[idx][4] = 'o'
         f = open(path_csv, 'w', newline='')
         wr = csv.writer(f)
         wr.writerows(data)
