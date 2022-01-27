@@ -1,10 +1,10 @@
 """
 input csv 예시
------------------------------------------------------------------------------
-태그    |   연도         |   이름               |   인용수      |   수집 여부
------------------------------------------------------------------------------
-C1     |               |  FlowDroid ...      |             |    x (or o)    
------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+태그    |   연도   |   이름               |   인용수   |   저자    |   출판사  |   수집 여부
+--------------------------------------------------------------------------------------------
+C1     |         |  FlowDroid ...      |          |          |         |  x (or o)    
+--------------------------------------------------------------------------------------------
 """
 
 """
@@ -19,6 +19,7 @@ C1     |               |  FlowDroid ...      |             |    x (or o)
 3) .py 파일과 동일 경로에 /result 폴더 생성해주어야 함.
 """
 
+from curses import meta
 from hashlib import new
 from shutil import ExecError
 import requests
@@ -40,6 +41,11 @@ USER INPUT
 HEADERS = {}
 # 정해진 양식으로 만들어진 csv 파일의 경로
 path_csv = ""
+
+# request header. 구글 보안 탐지 우회(반드시 추가 필요)
+HEADERS = {'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'accept-encoding': 'gzip, deflate, br', 'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7', 'cache-control': 'max-age=0', 'cookie': 'SEARCH_SAMESITE=CgQIqpQB; HSID=AG9STvIxg2BjYaCdu; SSID=A_p90oksTv3hBZDry; APISID=DgySxGixdrsWtPLg/AkNWm7n3pugylzKKS; SAPISID=cDkIupyLCZXQeSHC/AOwEPdmtie1I7FxJJ; __Secure-1PAPISID=cDkIupyLCZXQeSHC/AOwEPdmtie1I7FxJJ; __Secure-3PAPISID=cDkIupyLCZXQeSHC/AOwEPdmtie1I7FxJJ; GSP=A=ed_S3g:CPTS=1642837358:LM=1642837358:S=4N_Ujql_BFHiadF-; SID=GQilLtqZMA3oGYGPBAURMZM_8PU-MIzi8I4BMw8z1SU4xScktEEUwkR-WAbY0YtaMCsLJw.; __Secure-1PSID=GQilLtqZMA3oGYGPBAURMZM_8PU-MIzi8I4BMw8z1SU4xSckVgFB1z1FoKisA1RIvGVArQ.; __Secure-3PSID=GQilLtqZMA3oGYGPBAURMZM_8PU-MIzi8I4BMw8z1SU4xSckm4oWjNwUrZbClxOGMpsrpg.; 1P_JAR=2022-01-27-06; NID=511=HwDFcIWqYzHtn_1vTK-L00Eeh-St0yf7XyPDU8Xs9O2jOc79mWWuEW2urzLzBGJtdMPLoa9-sF1Tk3Kl_lvebV_sScQsH4shncFJKJIxBBqh8vE14ucfpm5o7dVJA4cm_vnKzQ9UU5Yaatty2AO2zPT6y9POIMJEbTjz1vbP6J_Jgyo_ogqd7p0DW2sTziG3-OFggVEDTugdkFWm_Ga91jmCq5sKl5iFkG76dlxbSinEIMkh1irBU_KfcR3NkNlxZm5kk5c3it9uGW4B; SIDCC=AJi4QfEDLt92arMC1ocMA_wcZLyjR_ZkE6B94A4urc2jKTEPYAIAdUuxK97v36BYAP7jhV-Gh7I; __Secure-3PSIDCC=AJi4QfFxVV_Bs6ryWCuIzV2GU2R4AtEKsUnolUVR7rRqaPDU917X3nyWnmIyHVo96TRvVcvJ5xLC', 'referer': 'https://scholar.google.com/', 'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97"', 'sec-ch-ua-mobile': '?0', 'sec-ch-ua-platform': '"macOS"', 'sec-fetch-dest': 'document', 'sec-fetch-mode': 'navigate', 'sec-fetch-site': 'same-origin', 'sec-fetch-user': '?1', 'upgrade-insecure-requests': '1', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36', 'x-client-data': 'CI+2yQEIpbbJAQjEtskBCKmdygEI8pPLAQjq8ssBCJ75ywEI54TMAQi0kswBCJ+TzAEIj5XMAQjElswBCMGXzAEYq6nKARitqcoBGI6eywE='}
+# 정해진 양식으로 만들어진 csv 파일의 경로
+path_csv = "/Users/hunjison/CRG/2022_PaperCollector/test.csv"
 
 """
 path_csv : csv 파일의 경로
@@ -115,25 +121,27 @@ def retrievePDF(soup):
 """
 soup : search() 함수에서 리턴된 값.
 return : (int: year, int: citation) 튜플
-def year_citation(BeautifulSoup: soup):
-    첫 번째 검색 결과를 파싱하여, 연도와 인용 수 파싱
+def author_year_citation_publication(BeautifulSoup: soup):
+    첫 번째 검색 결과를 파싱하여, 저자, 연도, 인용 수, 출판사 파싱
 """
-def year_citation(soup):
-    first = soup.select_one(".gs_r")
-    # year, 예시) 2014 - Digital Investigation
-    year = re.search("([\d]{4}) -", first.text)
-    if year:                # ['2014 -', '2014']
-        year = int(year[1])
+def author_year_citation_publication(soup):
+    publication_list = ["ieee", "acm", "Elsevier", "Springer"]
+    
+    first = soup.select_one(".gs_a")
+    metadata = first.text.split('-')
+    
+    author = metadata[0].strip()
+    year = metadata[1].split(',')[1].strip()
+    publication = metadata[2].strip()
+
     # citation
-    citation = re.search("([\d]{1,4})회 인용", first.text)
+    sector = soup.select_one(".gs_r")
+    citation = re.search("([\d]{1,4})회 인용", sector.text)
     if citation:            # ['2048회 인용', '2048']
         citation = int(citation[1])
+    citation = 0 if type(citation) != type(0) else citation    
 
-    # None -> 0
-    year = 0 if type(year) != type(0) else year
-    citation = 0 if type(citation) != type(0) else citation
-
-    return (year, citation)    
+    return (author, year, citation, publication)    
 
 """
 URL : pdf의 URL
@@ -148,11 +156,13 @@ def save(URL, save_name):
         return False
     
     with open(save_name + ".pdf","wb") as pdf:
-        for chunk in file.iter_content(chunk_size=1024):
-            if chunk:
-                pdf.write(chunk)
-        print("Save PDF Done!", save_name[:60])
-    
+        try:
+            for chunk in file.iter_content(chunk_size=1024):
+                if chunk:
+                    pdf.write(chunk)
+            print("Save PDF Done!", save_name[:60])
+        except:
+            return False
     return True
 
 """
@@ -161,13 +171,13 @@ MAIN START!
 (paper_list, data) = get_list_from_csv(path_csv)#[1:]
 for idx, paper_name in enumerate(paper_list):
     # 목차 1줄 빼기 + 중복 작업 수행 X
-    if idx == 0 or data[idx][4] == 'o':
+    if idx == 0 or data[idx][6] == 'o':
         continue 
     try:
         soup = search(paper_name)
         paper_url = retrievePDF(soup)
         tag = data[idx][0]
-        (year, citation) = year_citation(soup)
+        (author, year, citation, publication) = author_year_citation_publication(soup)
     except Exception as e:
         print(f"Error occured in search({paper_name[:20]})", e)
 
@@ -182,7 +192,10 @@ for idx, paper_name in enumerate(paper_list):
         # csv에 연도, 인용 추가
         data[idx][1] = year
         data[idx][3] = citation
-        data[idx][4] = 'o'
+        data[idx][4] = author
+        data[idx][5] = publication
+        data[idx][6] = 'o'
         f = open(path_csv, 'w', newline='')
         wr = csv.writer(f)
         wr.writerows(data)
+        f.close()
