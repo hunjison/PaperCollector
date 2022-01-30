@@ -42,11 +42,6 @@ HEADERS = {}
 # 정해진 양식으로 만들어진 csv 파일의 경로
 path_csv = ""
 
-# request header. 구글 보안 탐지 우회(반드시 추가 필요)
-HEADERS = {'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'accept-encoding': 'gzip, deflate, br', 'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7', 'cache-control': 'max-age=0', 'cookie': 'SEARCH_SAMESITE=CgQIqpQB; HSID=AG9STvIxg2BjYaCdu; SSID=A_p90oksTv3hBZDry; APISID=DgySxGixdrsWtPLg/AkNWm7n3pugylzKKS; SAPISID=cDkIupyLCZXQeSHC/AOwEPdmtie1I7FxJJ; __Secure-1PAPISID=cDkIupyLCZXQeSHC/AOwEPdmtie1I7FxJJ; __Secure-3PAPISID=cDkIupyLCZXQeSHC/AOwEPdmtie1I7FxJJ; GSP=A=ed_S3g:CPTS=1642837358:LM=1642837358:S=4N_Ujql_BFHiadF-; SID=GQilLtqZMA3oGYGPBAURMZM_8PU-MIzi8I4BMw8z1SU4xScktEEUwkR-WAbY0YtaMCsLJw.; __Secure-1PSID=GQilLtqZMA3oGYGPBAURMZM_8PU-MIzi8I4BMw8z1SU4xSckVgFB1z1FoKisA1RIvGVArQ.; __Secure-3PSID=GQilLtqZMA3oGYGPBAURMZM_8PU-MIzi8I4BMw8z1SU4xSckm4oWjNwUrZbClxOGMpsrpg.; 1P_JAR=2022-01-27-06; NID=511=HwDFcIWqYzHtn_1vTK-L00Eeh-St0yf7XyPDU8Xs9O2jOc79mWWuEW2urzLzBGJtdMPLoa9-sF1Tk3Kl_lvebV_sScQsH4shncFJKJIxBBqh8vE14ucfpm5o7dVJA4cm_vnKzQ9UU5Yaatty2AO2zPT6y9POIMJEbTjz1vbP6J_Jgyo_ogqd7p0DW2sTziG3-OFggVEDTugdkFWm_Ga91jmCq5sKl5iFkG76dlxbSinEIMkh1irBU_KfcR3NkNlxZm5kk5c3it9uGW4B; SIDCC=AJi4QfEDLt92arMC1ocMA_wcZLyjR_ZkE6B94A4urc2jKTEPYAIAdUuxK97v36BYAP7jhV-Gh7I; __Secure-3PSIDCC=AJi4QfFxVV_Bs6ryWCuIzV2GU2R4AtEKsUnolUVR7rRqaPDU917X3nyWnmIyHVo96TRvVcvJ5xLC', 'referer': 'https://scholar.google.com/', 'sec-ch-ua': '" Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97"', 'sec-ch-ua-mobile': '?0', 'sec-ch-ua-platform': '"macOS"', 'sec-fetch-dest': 'document', 'sec-fetch-mode': 'navigate', 'sec-fetch-site': 'same-origin', 'sec-fetch-user': '?1', 'upgrade-insecure-requests': '1', 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36', 'x-client-data': 'CI+2yQEIpbbJAQjEtskBCKmdygEI8pPLAQjq8ssBCJ75ywEI54TMAQi0kswBCJ+TzAEIj5XMAQjElswBCMGXzAEYq6nKARitqcoBGI6eywE='}
-# 정해진 양식으로 만들어진 csv 파일의 경로
-path_csv = "/Users/hunjison/CRG/2022_PaperCollector/test.csv"
-
 """
 path_csv : csv 파일의 경로
 return : (result: 논문 이름들 리스트, data: csv 전체 데이터 리스트)
